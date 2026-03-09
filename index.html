@@ -1,87 +1,270 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Soccer Random</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>H&H Inc.</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080b10;--surface:#0d1117;--panel:#111820;
+    --border:#1e2d3d;--accent:#00d4ff;--accent2:#7b68ee;
+    --text:#c9d1d9;--muted:#4a5568;--success:#2ed573;
+    --glow:0 0 20px rgba(0,212,255,0.3);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);overflow:hidden}
+  body::before{content:'';position:fixed;inset:0;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none}
 
-<meta name="generator" content="Scirra Construct">
-	<meta name="author" content="RHM Interactive">
-	<meta name="description" content="Random Physics Soccer">
-	<link rel="manifest" href="appmanifest.json">
+  /* ── LAUNCHER (full screen menu) ── */
+  #launcher{position:fixed;inset:0;z-index:100;display:flex;background:var(--bg)}
 
-<link rel="stylesheet" href="style.css">
+  #sidebar{width:260px;min-width:260px;height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
 
-<script>
-window.addEventListener("keydown", function(e) {
-    // space and arrow keys
-    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-        e.preventDefault();
-    }
-}, false);
-</script>
+  #logo{padding:22px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
+  #logo::after{content:'';position:absolute;bottom:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.6}
+  #logo .wordmark{font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  #logo .tagline{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:3px;text-transform:uppercase}
 
-<script async
-    data-ad-client="ca-pub-8349441957149316"
-    data-ad-channel="9976299074"
-    data-ad-frequency-hint="30s"
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
-    crossorigin="anonymous">
-</script>
+  #search-wrap{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #search{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+  #search:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,212,255,.1)}
+  #search::placeholder{color:var(--muted)}
 
-    <script>  
-        window.adsbygoogle = window.adsbygoogle || [];
-        const adBreak = adConfig = function(o) {adsbygoogle.push(o);}
-        adConfig({
-            preloadAdBreaks: 'on',
-            onReady: () => {
-                console.log("onReady")
-            },
-        });
-    </script>
+  #game-list-wrap{flex:1;overflow-y:auto;padding:10px 0}
+  #game-list-wrap::-webkit-scrollbar{width:4px}
+  #game-list-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-    <script>
-        function CallInterstitialAds()
-        {
-            adBreak({
-		        type: 'next',
-		        name: 'restart-game',
-		        beforeAd: () => { 
-			        console.log("Ad Started!");
-			        c3_callFunction("adStarted");
-		        },
-		        afterAd: () => { 
-			        c3_callFunction("onClose");
-			        console.log("After Ad Finished");
-		        },
-                adBreakDone: () => {
-                    console.log('adBreakDone');
-			        c3_callFunction("onClose");
-                }
-            });
-        }
-    </script>
+  .section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);padding:10px 20px 6px;text-transform:uppercase}
 
+  .game-item{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .18s}
+  .game-item:hover{background:rgba(0,212,255,.06);border-left-color:rgba(0,212,255,.4)}
+  .item-icon{width:36px;height:36px;border-radius:8px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:border-color .18s}
+  .game-item:hover .item-icon{border-color:var(--accent)}
+  .item-name{font-size:15px;font-weight:600;letter-spacing:.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item-file{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:1px}
+
+  .state-msg{padding:30px 20px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+  .state-msg .big{font-size:28px;margin-bottom:8px}
+
+  #refresh-btn{margin:0 16px 12px;padding:9px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;transition:all .2s;flex-shrink:0}
+  #refresh-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.05)}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+  .fade-in{animation:fadeIn .3s ease forwards}
+
+  /* ── RIGHT PANEL (welcome) ── */
+  #welcome-panel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;position:relative;overflow:hidden}
+  .welcome-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;-webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%);mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%)}
+  .welcome-icon{font-size:56px;filter:drop-shadow(0 0 20px var(--accent));animation:float 3s ease-in-out infinite;position:relative;z-index:1}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .welcome-title{font-size:32px;font-weight:700;letter-spacing:4px;text-transform:uppercase;background:linear-gradient(135deg,#fff 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;z-index:1}
+  .welcome-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;position:relative;z-index:1}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);animation:pulse 2s ease-in-out infinite;position:relative;z-index:1}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* ── FLOATING BACK BUTTON (shown while a game is running) ── */
+  #back-btn{
+    position:fixed;top:12px;left:0;z-index:200;
+    display:none;align-items:center;
+    background:rgba(8,11,16,0.75);
+    border:1px solid var(--border);border-left:none;
+    border-radius:0 8px 8px 0;
+    padding:7px 10px 7px 8px;
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+    cursor:default;backdrop-filter:blur(8px);
+    transition:all .35s cubic-bezier(.4,0,.2,1);
+    user-select:none;overflow:hidden;
+    max-width:28px;
+  }
+  #back-btn.visible{display:flex}
+  #back-btn:hover{max-width:340px;padding:7px 14px 7px 10px;border-color:#2a3a4d}
+
+  /* Grip — tiny always-visible handle */
+  #back-grip{font-size:12px;flex-shrink:0;opacity:.35;transition:all .2s;margin-right:0}
+  #back-btn:hover #back-grip{opacity:.8;margin-right:10px}
+
+  /* Expanded content — hidden until hovered */
+  #back-inner{display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .15s .12s;white-space:nowrap;overflow:hidden}
+  #back-btn:hover #back-inner{opacity:1;pointer-events:auto}
+
+  .back-label{color:var(--muted);font-size:10px}
+  .back-game{color:var(--accent);max-width:110px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
+
+  /* Confirm button — only this triggers back */
+  #back-confirm{
+    padding:4px 11px;background:transparent;
+    border:1px solid #ff4757;border-radius:5px;
+    color:#ff4757;font-family:'Space Mono',monospace;
+    font-size:9px;letter-spacing:1px;cursor:pointer;
+    transition:all .15s;text-transform:uppercase;flex-shrink:0;
+  }
+  #back-confirm:hover{background:rgba(255,71,87,.15);box-shadow:0 0 10px rgba(255,71,87,.25)}
+
+  /* ── The actual game runs HERE — the whole page IS the game ── */
+  #game-root{
+    position:fixed;inset:0;z-index:50;
+    display:none;
+    background:#000;
+  }
+  #game-root.visible{display:block}
+
+  /* We use an object tag — better native event passthrough than iframe */
+  #game-obj{
+    width:100%;height:100%;
+    border:none;display:block;
+    background:#000;
+  }
+</style>
 </head>
 <body>
 
-<script>
-if (location.protocol.substr(0, 4) === "file")
-{
-	alert("Web exports won't work until you upload them. (When running on the file: protocol, browsers block many features from working for security reasons.)");
-}
-</script>
-	<script src="box2d.wasm.js"></script>
-	<noscript>
-		<div id="notSupportedWrap">
-			<h2 id="notSupportedTitle">This content requires JavaScript</h2>
-			<p class="notSupportedMessage">JavaScript appears to be disabled. Please enable it to view this content.</p>
-		</div>
-	</noscript>
-	<script src="scripts/supportcheck.js"></script>
-	<script src="scripts/offlineclient.js" type="module"></script>
-	<script src="scripts/main.js" type="module"></script>
-	<script src="scripts/register-sw.js" type="module"></script>
+<!-- ── LAUNCHER MENU ── -->
+<div id="launcher">
+  <aside id="sidebar">
+    <div id="logo">
+      <div class="wordmark">H&amp;H Inc.</div>
+      <div class="tagline">Game Launcher v2</div>
+    </div>
+    <div id="search-wrap">
+      <input id="search" type="text" placeholder="Search games..." oninput="filterGames(this.value)">
+    </div>
+    <div id="game-list-wrap">
+      <div class="section-label">Library</div>
+      <div id="game-list"><div class="state-msg"><div class="big">⏳</div>Loading games...</div></div>
+    </div>
+    <button id="refresh-btn" onclick="fetchGames()">↻ &nbsp;Refresh Library</button>
+  </aside>
+  <div id="welcome-panel">
+    <div class="welcome-grid"></div>
+    <div class="welcome-icon">🎮</div>
+    <div class="welcome-title">H&amp;H Inc.</div>
+    <div class="welcome-sub">Select a game to begin</div>
+    <div class="dot"></div>
+  </div>
+</div>
 
+<!-- ── FLOATING BACK BUTTON ── -->
+<div id="back-btn">
+  <span id="back-grip">☰</span>
+  <div id="back-inner">
+    <span class="back-label">Playing: <span id="back-game-name" class="back-game">—</span></span>
+    <button id="back-confirm" onclick="backToLauncher()">← Menu</button>
+  </div>
+</div>
+
+<!-- ── GAME CONTAINER ── -->
+<div id="game-root">
+  <!--
+    Using iframe with allow="same-origin" so the game page runs
+    in the same origin context as index.html — giving it full
+    trusted native events from the real user interactions.
+    No event forwarding needed at all.
+  -->
+  <iframe id="game-obj"
+    src="about:blank"
+    allow="autoplay; fullscreen; clipboard-read; clipboard-write; accelerometer; gyroscope"
+    allowfullscreen
+    tabindex="0"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock allow-presentation">
+  </iframe>
+</div>
+
+<script>
+"use strict";
+var BASE_URL = window.location.href.replace(/\/[^\/]*$/, '/');
+var allGames = [];
+
+/* ── FETCH GAMES ── */
+function fetchGames() {
+  var btn  = document.getElementById('refresh-btn');
+  var list = document.getElementById('game-list');
+  btn.style.animation = 'spin 1s linear infinite';
+  list.innerHTML = '<div class="state-msg"><div class="big">⏳</div>Loading...</div>';
+
+  fetch(BASE_URL + 'games.json?t=' + Date.now())
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(games){
+      allGames = games;
+      renderList(allGames);
+      btn.style.animation = '';
+    })
+    .catch(function(err){
+      list.innerHTML = '<div class="state-msg"><div class="big">⚠️</div>'
+        +'Could not load games.json<br><small style="color:#ff4757">'+err.message+'</small><br>'
+        +'<small style="color:#4a5568">Upload games.json to your repo!</small></div>';
+      btn.style.animation = '';
+    });
+}
+
+function renderList(games) {
+  var list = document.getElementById('game-list');
+  if(!games.length){
+    list.innerHTML='<div class="state-msg"><div class="big">📭</div>No games found.<br>Add entries to games.json</div>';
+    return;
+  }
+  list.innerHTML = games.map(function(g,i){
+    var sf = g.file.replace(/'/g,"\\'");
+    var sn = g.name.replace(/'/g,"\\'");
+    return '<div class="game-item fade-in" style="animation-delay:'+(i*0.05)+'s" onclick="launchGame(\''+sf+'\',\''+sn+'\')">'
+      +'<div class="item-icon">'+(g.icon||'🎮')+'</div>'
+      +'<div><div class="item-name">'+esc(g.name)+'</div>'
+      +'<div class="item-file">'+esc(g.file)+'</div></div></div>';
+  }).join('');
+}
+
+function filterGames(q){
+  q=q.toLowerCase().trim();
+  renderList(allGames.filter(function(g){
+    return g.name.toLowerCase().includes(q)||g.file.toLowerCase().includes(q);
+  }));
+}
+
+/* ── LAUNCH: navigate the game iframe directly to the file ──
+   The game iframe is same-origin (github.io) so it gets:
+   - Native trusted mouse events (clicks, right-click, scroll)
+   - Native trusted keyboard events (WASD, space, arrows, typing)
+   - pointer-lock works natively (same origin, user gesture inside frame)
+   - No event forwarding needed at all
+*/
+function launchGame(file, name) {
+  // Show game container, hide launcher
+  document.getElementById('launcher').style.display   = 'none';
+  document.getElementById('game-root').classList.add('visible');
+
+  // Update back button
+  document.getElementById('back-game-name').textContent = name;
+  document.getElementById('back-btn').classList.add('visible');
+
+  // Navigate the iframe to the game — same origin, real native events
+  var obj = document.getElementById('game-obj');
+  obj.src = BASE_URL + file;
+
+  // Focus the frame as soon as it loads
+  obj.onload = function(){
+    obj.focus();
+    try{ obj.contentWindow.focus(); }catch(e){}
+  };
+}
+
+function backToLauncher(){
+  // Stop the game
+  var obj = document.getElementById('game-obj');
+  obj.src = 'about:blank';
+
+  // Show launcher again
+  document.getElementById('game-root').classList.remove('visible');
+  document.getElementById('launcher').style.display = 'flex';
+  document.getElementById('back-btn').classList.remove('visible');
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+fetchGames();
+</script>
 </body>
 </html>
